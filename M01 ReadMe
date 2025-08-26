@@ -1,0 +1,17 @@
+## Overview
+This C# console app demonstrates:
+- **Authentication** using a hardcoded username and role.
+- **Roles** (`admin` and `user`).
+- **Access Control** where only specific roles can access certain actions.
+
+## How it Works
+- The program has two users: `alice` (admin) and `bob` (user).
+- When you log in with a username, the role is assigned.
+- `AdminAction` can only be run by admins.
+- `UserAction` can only be run by regular users.
+
+## CIA Triad Connection
+This project demonstrates **Confidentiality**:
+
+- **Confidentiality** means restricting access to information or actions only to those who are authorized.  
+- In this program, role-based checks ensure unauthorized users cannot access actions meant for other roles.
