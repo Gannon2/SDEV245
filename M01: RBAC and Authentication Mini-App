@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    // Hardcoded users with roles
+    static Dictionary<string, string> users = new Dictionary<string, string>()
+    {
+        { "alice", "admin" },
+        { "bob", "user" }
+    };
+
+    static void Main()
+    {
+        // Simulates login
+        string username = "alice"; // Tries any invalid username
+        string role = Login(username);
+
+        if (role != null)
+        {
+            AdminAction(role);
+            UserAction(role);
+        }
+
+        Console.ReadLine();
+    }
+
+    static string Login(string username)
+    {
+        if (users.ContainsKey(username))
+        {
+            string role = users[username];
+            Console.WriteLine($"Successfully logged in as {username} with role: {role}");
+            return role;
+        }
+        else
+        {
+            Console.WriteLine("Login failed. Unknown user.");
+            return null;
+        }
+    }
+
+    static void AdminAction(string role)
+    {
+        if (role == "admin")
+            Console.WriteLine("Admin-only action performed!");
+        else
+            Console.WriteLine("Access denied. Admins only.");
+    }
+
+    static void UserAction(string role)
+    {
+        if (role == "user")
+            Console.WriteLine("User-only action performed!");
+        else
+            Console.WriteLine("Access denied. Users only.");
+    }
+}
+
+/*
+Explanation:
+This app demonstrates role-based access control, which enforces "Confidentiality" 
+from the CIA triad. Confidentiality ensures that only authorized users 
+have access to specific resources. Here, only admins can perform admin actions, 
+and only regular users can perform user actions.
+*/
