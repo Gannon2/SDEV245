@@ -1,0 +1,86 @@
+using System;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace Encrypt_Decrypt_Demo
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // ===== SYMMETRIC (AES) =====
+            Console.WriteLine("=== Symmetric (AES) Encryption/Decryption ===");
+            string plainText = "Hello, this is a secret message!";
+
+            using (Aes aes = Aes.Create())
+            {
+                aes.GenerateKey();
+                aes.GenerateIV();
+
+                byte[] encrypted = EncryptAES(plainText, aes.Key, aes.IV);
+                string decrypted = DecryptAES(encrypted, aes.Key, aes.IV);
+
+                Console.WriteLine("AES Key (Base64): " + Convert.ToBase64String(aes.Key));
+                Console.WriteLine("AES IV (Base64): " + Convert.ToBase64String(aes.IV));
+                Console.WriteLine("Input: " + plainText);
+                Console.WriteLine("Encrypted: " + Convert.ToBase64String(encrypted));
+                Console.WriteLine("Decrypted: " + decrypted);
+            }
+
+            Console.WriteLine();
+
+            // ===== ASYMMETRIC (RSA) =====
+            Console.WriteLine("=== Asymmetric (RSA) Encryption/Decryption ===");
+
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+            {
+                string rsaPlainText = "RSA Secret Message!";
+                byte[] inputBytes = Encoding.UTF8.GetBytes(rsaPlainText);
+
+                byte[] encryptedRSA = rsa.Encrypt(inputBytes, false);
+                byte[] decryptedRSA = rsa.Decrypt(encryptedRSA, false);
+
+                // Export keys as XML
+                string publicKey = rsa.ToXmlString(false); // public only
+                string privateKey = rsa.ToXmlString(true); // public + private
+
+                Console.WriteLine("RSA Public Key (XML): \n" + publicKey);
+                Console.WriteLine("RSA Private Key (XML): \n" + privateKey);
+                Console.WriteLine("Input: " + rsaPlainText);
+                Console.WriteLine("Encrypted: " + Convert.ToBase64String(encryptedRSA));
+                Console.WriteLine("Decrypted: " + Encoding.UTF8.GetString(decryptedRSA));
+            }
+
+            Console.WriteLine("\nPress Enter to exit...");
+            Console.ReadLine();
+        }
+
+        // AES Encryption
+        static byte[] EncryptAES(string plainText, byte[] key, byte[] iv)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = iv;
+                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+                byte[] inputBytes = Encoding.UTF8.GetBytes(plainText);
+                return encryptor.TransformFinalBlock(inputBytes, 0, inputBytes.Length);
+            }
+        }
+
+        // AES Decryption
+        static string DecryptAES(byte[] cipherText, byte[] key, byte[] iv)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = iv;
+                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+                byte[] result = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+                return Encoding.UTF8.GetString(result);
+            }
+        }
+    }
+}
