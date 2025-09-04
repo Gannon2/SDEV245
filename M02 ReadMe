@@ -1,0 +1,11 @@
+Features
+
+• Demonstrates symmetric encryption and decryption using AES
+• Demonstrates asymmetric encryption and decryption using RSA
+• Shows keys, input text, encrypted output, and decrypted result in the console
+
+How to Run
+
+• Open the project in Visual Studio or VS Code
+• Build and run the console application
+• The console will display the results for both AES and RSA
