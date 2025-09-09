@@ -1,0 +1,7 @@
+This program demonstrates three cryptography concepts in C#
+
+SHA-256 hashing of text or files  
+Caesar cipher encryption and decryption  
+RSA digital signatures with signing and verification  
+
+Run the program and choose an option from the menu. Follow the prompts to test each feature
