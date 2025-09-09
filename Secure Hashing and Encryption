@@ -1,0 +1,114 @@
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace CryptoDemo
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Crypto Demo App");
+            Console.WriteLine("1 = SHA-256 Hash");
+            Console.WriteLine("2 = Caesar Cipher");
+            Console.WriteLine("3 = Digital Signature (RSA)");
+            Console.Write("Choose option: ");
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    RunSHA256();
+                    break;
+                case "2":
+                    RunCaesar();
+                    break;
+                case "3":
+                    RunSignature();
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice");
+                    break;
+
+            }
+            Console.WriteLine("Press Enter to exit...");
+            Console.ReadLine();
+        }
+
+        // === SHA-256 ===
+        static void RunSHA256()
+        {
+            Console.WriteLine("Enter text to hash (or file path):");
+            string input = Console.ReadLine();
+
+            string data;
+            if (File.Exists(input))
+                data = File.ReadAllText(input);
+            else
+                data = input;
+
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(data);
+                byte[] hash = sha.ComputeHash(bytes);
+                Console.WriteLine("SHA-256 Hash: " + BitConverter.ToString(hash).Replace("-", ""));
+            }
+        }
+
+        // === Caesar Cipher ===
+        static void RunCaesar()
+        {
+            Console.WriteLine("Enter text:");
+            string text = Console.ReadLine();
+            Console.WriteLine("Enter shift (number):");
+            int shift = int.Parse(Console.ReadLine());
+
+            string encrypted = CaesarEncrypt(text, shift);
+            string decrypted = CaesarDecrypt(encrypted, shift);
+
+            Console.WriteLine("Encrypted: " + encrypted);
+            Console.WriteLine("Decrypted: " + decrypted);
+        }
+
+        static string CaesarEncrypt(string text, int shift)
+        {
+            StringBuilder result = new StringBuilder();
+            foreach (char c in text)
+            {
+                if (char.IsLetter(c))
+                {
+                    char baseChar = char.IsUpper(c) ? 'A' : 'a';
+                    result.Append((char)((c + shift - baseChar) % 26 + baseChar));
+                }
+                else
+                {
+                    result.Append(c);
+                }
+            }
+            return result.ToString();
+        }
+
+        static string CaesarDecrypt(string text, int shift)
+        {
+            return CaesarEncrypt(text, 26 - shift);
+        }
+
+        // === Digital Signature ===
+        static void RunSignature()
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                Console.WriteLine("Enter message to sign:");
+                string message = Console.ReadLine();
+                byte[] data = Encoding.UTF8.GetBytes(message);
+
+                byte[] signature = rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                bool verified = rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                Console.WriteLine("Signature (Base64): " + Convert.ToBase64String(signature));
+                Console.WriteLine("Verified: " + verified);
+            }
+        }
+    }
+}
