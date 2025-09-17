@@ -1,0 +1,143 @@
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace Midterm
+{
+    class Program
+    {
+        // this line computes SHA-256 hash of given data
+        static byte[] ComputeSha256(byte[] data)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                return sha.ComputeHash(data); // this line returns hash bytes
+            }
+        }
+
+        // this line encrypts plaintext with AES-256-CBC
+        static byte[] EncryptAes(byte[] plaintext, out byte[] key, out byte[] iv)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.KeySize = 256;
+                aes.BlockSize = 128;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+
+                key = new byte[aes.KeySize / 8]; // this line allocates space for AES key
+                iv = new byte[aes.BlockSize / 8]; // this line allocates space for IV
+
+                // this block generates cryptographically secure random key and IV
+                using (var rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(key); // this line fills key with random bytes
+                    rng.GetBytes(iv);  // this line fills IV with random bytes
+                }
+
+                aes.Key = key; // this line assigns the key to AES
+                aes.IV = iv;   // this line assigns the IV to AES
+
+                using (var ms = new MemoryStream())
+                using (var crypto = aes.CreateEncryptor())
+                using (var cs = new CryptoStream(ms, crypto, CryptoStreamMode.Write))
+                {
+                    cs.Write(plaintext, 0, plaintext.Length); // this line writes plaintext for encryption
+                    cs.FlushFinalBlock(); // this line finalizes encryption
+                    return ms.ToArray(); // this line returns encrypted bytes
+                }
+            }
+        }
+
+        // this line decrypts AES ciphertext
+        static byte[] DecryptAes(byte[] ciphertext, byte[] key, byte[] iv)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.KeySize = 256;
+                aes.BlockSize = 128;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Key = key;
+                aes.IV = iv;
+
+                using (var ms = new MemoryStream())
+                using (var crypto = aes.CreateDecryptor())
+                using (var cs = new CryptoStream(ms, crypto, CryptoStreamMode.Write))
+                {
+                    cs.Write(ciphertext, 0, ciphertext.Length); // this line writes ciphertext for decryption
+                    cs.FlushFinalBlock(); // this line finalizes decryption
+                    return ms.ToArray(); // this line returns decrypted bytes
+                }
+            }
+        }
+
+        // this line saves bytes to a file
+        static void SaveBytesToFile(string path, byte[] bytes)
+        {
+            File.WriteAllBytes(path, bytes); // this line writes bytes to file
+        }
+
+        static void Main(string[] args)
+        {
+            Console.WriteLine("=== Integrity & Confidentiality Demo ===");
+
+            Console.Write("Choose 1 (message) or 2 (file): ");
+            string choice = Console.ReadLine()?.Trim(); // this line reads user choice
+
+            byte[] inputBytes;
+            string label;
+
+            if (choice == "2")
+            {
+                Console.Write("Enter file path: ");
+                string filePath = Console.ReadLine().Trim();
+                if (!File.Exists(filePath)) return; // this line exits if file not found
+                inputBytes = File.ReadAllBytes(filePath); // this line reads file bytes
+                label = Path.GetFileName(filePath);
+            }
+            else
+            {
+                Console.Write("Enter message: ");
+                string message = Console.ReadLine() ?? "";
+                inputBytes = Encoding.UTF8.GetBytes(message); // this line converts message to bytes
+                label = "message";
+            }
+
+            byte[] originalHash = ComputeSha256(inputBytes); // this line computes SHA-256 hash
+            string originalHashHex = BitConverter.ToString(originalHash).Replace("-", "").ToLowerInvariant();
+            Console.WriteLine($"SHA-256 hash ({label}): {originalHashHex}");
+
+            byte[] ciphertext = EncryptAes(inputBytes, out byte[] key, out byte[] iv); // this line encrypts input
+            Console.WriteLine("Data encrypted using AES-256-CBC.");
+
+            string outDir = "output_artifacts";
+            Directory.CreateDirectory(outDir); // this line ensures output folder exists
+            SaveBytesToFile(Path.Combine(outDir, "ciphertext.bin"), ciphertext);
+            SaveBytesToFile(Path.Combine(outDir, "key.bin"), key);
+            SaveBytesToFile(Path.Combine(outDir, "iv.bin"), iv);
+            File.WriteAllText(Path.Combine(outDir, "original_hash.hex"), originalHashHex);
+
+            byte[] decrypted = DecryptAes(ciphertext, key, iv); // this line decrypts ciphertext
+            string decryptedText = Encoding.UTF8.GetString(decrypted);
+            Console.WriteLine($"Decrypted content preview: {decryptedText}");
+
+            byte[] decryptedHash = ComputeSha256(decrypted); // this line computes hash of decrypted content
+            bool match = CryptographicEquals(originalHash, decryptedHash); // this line compares hashes
+            Console.WriteLine(match ? "Integrity check PASSED." : "Integrity check FAILED.");
+
+            Console.ReadLine();
+        }
+
+        // this line compares byte arrays in constant time to prevent timing attacks
+        static bool CryptographicEquals(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length) return false;
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++)
+                diff |= a[i] ^ b[i];
+            return diff == 0;
+        }
+    }
+}
