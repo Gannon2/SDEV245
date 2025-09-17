@@ -1,0 +1,3 @@
+Integrity and Confidentiality Demo
+
+Hashes and encrypts a message or file, then decrypts and verifies it. Files are saved in the user's output artifact folder.
