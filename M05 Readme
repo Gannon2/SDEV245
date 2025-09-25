@@ -1,0 +1,20 @@
+1. Any user can access any profile by changing the userId. There is no check to see if the requester is allowed to see that data. 
+The endpoint now checks if the requester is the owner or an admin before returning data. Sensitive fields like passwords are excluded.
+2. Anyone can view any account without login or authorization. This allows horizontal privilege escalation.
+Now, only the account owner or an admin can access the account. The password is not included in the returned data.
+3. MD5 is insecure for password hashing. It is fast and vulnerable to brute-force attacks.
+Bcrypt is slow and salted, which makes brute-force attacks much harder.
+4. SHA1 is weak and unsalted, so passwords are easy to crack.
+Bcrypt automatically salts and slows hashing, making attacks impractical.
+5.Concatenating user input into SQL allows SQL injection.
+Parameterized queries separate data from code, preventing SQL injection.
+6. Directly using user input can allow NoSQL injection if operators are passed.
+Input is forced to a string and validated. Sensitive fields are excluded. No operators can be injected.
+7. Anyone can reset another user's password by knowing their email. No verification is required.
+Tokens are single-use and expire. Only the email owner can reset the password.
+8. The script is loaded without integrity checks or version pinning. A compromised CDN could inject malicious code.
+Subresource Integrity ensures the file has not been altered. Pinning versions avoids unexpected changes.
+9. Any URL can be fetched, including internal services, which exposes sensitive data.
+Now, only pre-approved hosts are allowed. Internal services cannot be accessed.
+10. Passwords are stored in plaintext and compared directly, which is unsafe.
+Passwords are now stored as secure hashes. Bcrypt safely verifies the password.
