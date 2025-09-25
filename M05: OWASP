@@ -1,0 +1,110 @@
+//1.
+
+app.get('/profile/:userId', authenticate, async (req, res) => {
+  const userId = req.params.userId;
+  if (req.user.role !== 'admin' && req.user.id !== userId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    const user = await User.findById(userId).select('-password -ssn');
+    if (!user) return res.status(404).json({ error: 'Not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+//2.
+
+from flask_login import login_required, current_user
+
+@app.route('/account/<user_id>')
+@login_required
+def get_account(user_id):
+    if current_user.role != 'admin' and str(current_user.id) != str(user_id):
+        return jsonify({'error': 'forbidden'}), 403
+    user = User.query.filter_by(id=user_id).first_or_404()
+    return jsonify(user.to_dict(exclude=['password']))
+
+//3.
+
+import org.mindrot.jbcrypt.BCrypt;
+
+public String hashPassword(String password) {
+    String salt = BCrypt.gensalt(12);
+    return BCrypt.hashpw(password, salt);
+}
+
+//4.
+
+from passlib.hash import bcrypt
+
+def hash_password(password):
+    return bcrypt.hash(password)
+
+def verify_password(password, hashed):
+    return bcrypt.verify(password, hashed)
+
+//5. 
+
+String username = request.getParameter("username");
+String sql = "SELECT * FROM users WHERE username = ?";
+PreparedStatement ps = connection.prepareStatement(sql);
+ps.setString(1, username);
+ResultSet rs = ps.executeQuery();
+
+//6.
+
+app.get('/user', (req, res) => {
+    let username = String(req.query.username || '').trim();
+    if (!username) return res.status(400).json({error:'missing username'});
+    db.collection('users').findOne({ username: username }, { projection: { password: 0 } }, (err, user) => {
+        if (err) return res.status(500).end();
+        if (!user) return res.status(404).json({ error: 'Not found' });
+        res.json(user);
+    });
+});
+
+//7.
+
+@app.route('/reset/<token>', methods=['POST'])
+def reset_with_token(token):
+    new_password = request.form.get('new_password')
+    user_id = verify_and_consume_token(token)
+    if not user_id:
+        return jsonify({'error':'invalid or expired token'}), 400
+    user = User.query.get(user_id)
+    user.password = bcrypt.hash(new_password)
+    db.session.commit()
+    return jsonify({'status':'password updated'})
+
+//8.
+
+<script src="https://cdn.example.com/lib.js"
+        integrity="sha384-REPLACE_WITH_HASH"
+        crossorigin="anonymous"></script>
+
+//9.
+
+from urllib.parse import urlparse
+import requests
+
+ALLOWED_HOSTS = {'example.com', 'api.example.com'}
+
+url = input("Enter URL: ")
+host = urlparse(url).hostname
+if host not in ALLOWED_HOSTS:
+    raise ValueError("host not allowed")
+resp = requests.get(url, timeout=5)
+print(resp.text)
+
+//10.
+
+import org.mindrot.jbcrypt.BCrypt;
+
+if (BCrypt.checkpw(inputPassword, user.getPasswordHash())) {
+    // Login success
+} else {
+    // Login failed
+}
+
